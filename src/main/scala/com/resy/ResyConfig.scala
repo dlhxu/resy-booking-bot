@@ -1,6 +1,17 @@
 package com.resy
 
-final case class ResyKeys(apiKey: String, authToken: String)
+final case class ResyKeys(
+  apiKey: String,
+  authToken: String,
+  resyUniversalAuth: String
+)
+
+final case class AdditionalHeaders(
+  userAgent: String,
+  secChUa: String,
+  secFetchMode: String,
+  secFetchSite: String
+)
 
 final case class ReservationDetails(
   date: String,
