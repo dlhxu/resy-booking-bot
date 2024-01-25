@@ -10,7 +10,7 @@ import java.net.URLEncoder
 import scala.concurrent.Future
 
 // Resy API docs can be found here http://subzerocbd.info/
-class ResyApi(resyToken: ResyKeys) {
+class ResyApi(resyToken: ResyKeys, additionalHeaders: AdditionalHeaders) {
 
   /** Find available reservations
     * @param date
@@ -31,7 +31,7 @@ class ResyApi(resyToken: ResyKeys) {
       "venue_id"   -> venueId.toString
     )
 
-    sendGetRequest(resyToken, "api.resy.com/4/find", findResQueryParams)
+    sendGetRequest(resyToken, additionalHeaders, "api.resy.com/4/find", findResQueryParams)
   }
 
   /** Get details of the reservation
@@ -52,7 +52,7 @@ class ResyApi(resyToken: ResyKeys) {
         "party_size" -> partySize.toString
       )
 
-    sendGetRequest(resyToken, "api.resy.com/3/details", findResQueryParams)
+    sendGetRequest(resyToken, additionalHeaders, "api.resy.com/3/details", findResQueryParams)
   }
 
   /** Book the reservation
@@ -69,7 +69,7 @@ class ResyApi(resyToken: ResyKeys) {
       "struct_payment_method" -> s"""{"id":$paymentMethodId}"""
     )
 
-    sendPostRequest(resyToken, "api.resy.com/3/book", bookResQueryParams)
+    sendPostRequest(resyToken, additionalHeaders, "api.resy.com/3/book", bookResQueryParams)
   }
 }
 
@@ -79,6 +79,7 @@ object ResyApi extends Logging {
 
   private def sendGetRequest(
     resyKeys: ResyKeys,
+    additionalHeaders: AdditionalHeaders,
     baseUrl: String,
     queryParams: Map[String, String]
   ): Future[String] = {
@@ -88,13 +89,14 @@ object ResyApi extends Logging {
     logger.debug(s"URL Request: $url")
 
     ws.url(url)
-      .withHttpHeaders(createHeaders(resyKeys): _*)
+      .withHttpHeaders(createHeaders(resyKeys, additionalHeaders): _*)
       .get
       .map(_.body)(system.dispatcher)
   }
 
   private def sendPostRequest(
     resyKeys: ResyKeys,
+    additionalHeaders: AdditionalHeaders,
     baseUrl: String,
     queryParams: Map[String, String]
   ): Future[String] = {
@@ -106,7 +108,7 @@ object ResyApi extends Logging {
 
     ws.url(url)
       .withHttpHeaders(
-        createHeaders(resyKeys) ++ Seq(
+        createHeaders(resyKeys, additionalHeaders) ++ Seq(
           "Content-Type" -> "application/x-www-form-urlencoded",
           "Origin"       -> "https://widgets.resy.com",
           "Referer"      -> "https://widgets.resy.com/"
@@ -116,10 +118,18 @@ object ResyApi extends Logging {
       .map(_.body)(system.dispatcher)
   }
 
-  private[this] def createHeaders(resyKeys: ResyKeys): Seq[(String, String)] = {
+  private[this] def createHeaders(
+    resyKeys: ResyKeys,
+    additionalHeaders: AdditionalHeaders
+  ): Seq[(String, String)] = {
     Seq(
-      "Authorization"     -> s"""ResyAPI api_key="${resyKeys.apiKey}"""",
-      "x-resy-auth-token" -> resyKeys.authToken
+      "Authorization"         -> s"""ResyAPI api_key="${resyKeys.apiKey}"""",
+      "X-Resy-Auth-Token"     -> resyKeys.authToken,
+      "User-Agent"            -> additionalHeaders.userAgent,
+      "X-Resy-Universal-Auth" -> resyKeys.resyUniversalAuth,
+      "Sec-Ch-Ua"             -> additionalHeaders.secChUa,
+      "Sec-Fetch-Mode"        -> additionalHeaders.secFetchMode,
+      "Sec-Fetch-Site"        -> additionalHeaders.secFetchSite
     )
   }
 
