@@ -37,17 +37,9 @@ object ResyBookingBot extends Logging {
       if (todaysSnipeTime.getMillis > dateTimeNow.getMillis) todaysSnipeTime
       else todaysSnipeTime.plusDays(1)
 
-    val millisUntilTomorrow = nextSnipeTime.getMillis - DateTime.now.getMillis - 2000
-    val hoursRemaining      = millisUntilTomorrow / 1000 / 60 / 60
-    val minutesRemaining    = millisUntilTomorrow / 1000 / 60 - hoursRemaining * 60
-    val secondsRemaining =
-      millisUntilTomorrow / 1000 - hoursRemaining * 60 * 60 - minutesRemaining * 60
+    val millisUntilTomorrow = nextSnipeTime.getMillis - DateTime.now.getMillis - 50
 
-    logger.info(s"res details from config: $resDetails")
     logger.info(s"Next snipe time: $nextSnipeTime")
-    logger.info(
-      s"Sleeping for $hoursRemaining hours, $minutesRemaining minutes, and $secondsRemaining seconds"
-    )
 
     system.scheduler.scheduleOnce(millisUntilTomorrow millis) {
       resyBookingWorkflow.run()
