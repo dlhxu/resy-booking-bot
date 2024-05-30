@@ -150,12 +150,13 @@ class ResyClient(resyApi: ResyApi) extends Logging {
     dateTimeStart: Long
   ): Try[String] = {
     val reservationTimesResp: Try[ReservationMap] = Try {
+      logger.info("getting reservations now")
       val response = Await.result(
         awaitable = resyApi.getReservations(date, partySize, venueId),
         atMost    = 5 seconds
       )
 
-      logger.debug(s"URL Response: $response")
+      logger.info(s"URL Response: $response")
 
       // Searching this JSON list structure...
       // {"results": {"venues": [{"slots": [{...}, {...}]}]}}
@@ -192,6 +193,8 @@ class ResyClient(resyApi: ResyApi) extends Logging {
       }
     }
 
+    logger.info(s"result for finding reservation time: $results")
+
     results match {
       case Some(configId) =>
         logger.info(s"Config Id: $configId")
@@ -218,6 +221,7 @@ class ResyClient(resyApi: ResyApi) extends Logging {
         val tableType = (config \ "type").get.toString.toLowerCase.drop(1).dropRight(1)
         val configId  = (config \ "token").get.toString.drop(1).dropRight(1)
 
+        logger.info(s"Time: $time, ConfigId: $configId")
         if (!reservationMap.contains(time))
           reservationMap.updated(time, Map(tableType -> configId))
         else

@@ -15,7 +15,7 @@ object ResyBookingBot extends Logging {
   def main(args: Array[String]): Unit = {
     logger.info("Starting Resy Booking Bot")
 
-    val resyConfig        = ConfigSource.resources("resyConfig.conf")
+    val resyConfig        = ConfigSource.resources("copy.conf")
     val resyKeys          = resyConfig.at("resyKeys").loadOrThrow[ResyKeys]
     val additionalHeaders = resyConfig.at("additionalHeaders").loadOrThrow[AdditionalHeaders]
     val resDetails        = resyConfig.at("resDetails").loadOrThrow[ReservationDetails]
@@ -43,6 +43,7 @@ object ResyBookingBot extends Logging {
     val secondsRemaining =
       millisUntilTomorrow / 1000 - hoursRemaining * 60 * 60 - minutesRemaining * 60
 
+    logger.info(s"res details from config: $resDetails")
     logger.info(s"Next snipe time: $nextSnipeTime")
     logger.info(
       s"Sleeping for $hoursRemaining hours, $minutesRemaining minutes, and $secondsRemaining seconds"
